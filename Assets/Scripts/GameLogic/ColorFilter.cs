@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 
-
 public class ColorFilter : MonoBehaviour
 {
     public enum FilterType { Cyan, Magenta, Yellow }
