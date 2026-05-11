@@ -48,6 +48,6 @@ Yellow → поглощает синий, пропускает красный + 
 
 Sci-Fi Lab Kit – Modular Stylized Low Poly Environment Assets - https://assetstore.unity.com/packages/3d/environments/sci-fi/sci-fi-lab-kit-modular-stylized-low-poly-environment-assets-324212
 
-Ссылка на видео с механикамии примером уровня:
+Ссылка на видео с механиками и примером уровня:
 
 https://drive.google.com/drive/folders/1wtga7yyaPILqnE-h9jcOt2OhYsKdoyZN?usp=sharing
