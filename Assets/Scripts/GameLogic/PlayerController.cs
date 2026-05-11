@@ -13,6 +13,11 @@ public class PlayerController : MonoBehaviour
     [Header("Обзор")]
     public float mouseSensitivity = 2f;
 
+    [Header("Границы")]
+    public float fallLimit = -10f;             
+    public Vector3 respawnPosition;             
+    public bool useStartPosition = true;        
+
     private CharacterController controller;
     private Camera playerCam;
     private Vector3 velocity;
@@ -27,6 +32,9 @@ public class PlayerController : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         playerCam = GetComponentInChildren<Camera>();
+
+        if (useStartPosition)
+            respawnPosition = transform.position;
 
         moveAction = new InputAction("Move", type: InputActionType.Value);
         moveAction.AddCompositeBinding("2DVector")
@@ -49,10 +57,16 @@ public class PlayerController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        if (useStartPosition)
+            respawnPosition = transform.position;
     }
 
     void Update()
     {
+  
+        CheckFallLimit();
+
         bool isGrounded = controller.isGrounded;
 
         if (isGrounded && velocity.y < 0f)
@@ -81,7 +95,38 @@ public class PlayerController : MonoBehaviour
         xRotation -= lookInput.y * mouseSensitivity;
         xRotation = Mathf.Clamp(xRotation, -80f, 80f);
         playerCam.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+    }
 
+    void CheckFallLimit()
+    {
+        if (transform.position.y < fallLimit)
+        {
+            TeleportToRespawn();
+        }
+    }
+
+    void TeleportToRespawn()
+    {
+        controller.enabled = false;
+
+        transform.position = respawnPosition;
+
+        velocity.y = 0f;
+
+        controller.enabled = true;
+
+       // Debug.Log($"[PlayerController] Игрок упал за карту! Телепортация на {respawnPosition}");
+    }
+
+    public void SetRespawnPoint(Vector3 newRespawnPosition)
+    {
+        respawnPosition = newRespawnPosition;
+        Debug.Log($"[PlayerController] Точка респавна обновлена: {respawnPosition}");
+    }
+
+    public void ForceRespawn()
+    {
+        TeleportToRespawn();
     }
 
     void OnDisable()
@@ -90,5 +135,19 @@ public class PlayerController : MonoBehaviour
         lookAction?.Disable();
         jumpAction?.Disable();
         sprintAction?.Disable();
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
+        Vector3 fallPosition = transform.position;
+        fallPosition.y = fallLimit;
+        Gizmos.DrawWireCube(fallPosition, new Vector3(50f, 0.1f, 50f));
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(Application.isPlaying ? respawnPosition :
+            (useStartPosition ? transform.position : respawnPosition), 0.5f);
+        Gizmos.DrawRay(Application.isPlaying ? respawnPosition :
+            (useStartPosition ? transform.position : respawnPosition), Vector3.up * 2f);
     }
 }

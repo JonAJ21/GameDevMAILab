@@ -3,41 +3,70 @@
 public class LightReceiver : MonoBehaviour
 {
     [Header("Настройки")]
-    public Color targetColor = Color.white;
-    [Range(0f, 1f)] public float tolerance = 0.15f;
-    public Color idleColor = Color.gray; 
+    public Color requiredColor = Color.white;
+    [Range(0f, 1f)]
+    public float colorTolerance = 0.1f;
 
-    private MeshRenderer myRenderer;
-    private bool isActivated = false;
+    [Header("Дверь")]
+    public DoorController targetDoor;
 
-    void Awake()
+    private bool isReceivingRequiredColor = false;
+    private bool checkThisFrame = false;
+
+    void Update()
     {
-        myRenderer = GetComponent<MeshRenderer>();
-        if (myRenderer != null)
-            myRenderer.material.color = idleColor;
+        if (!checkThisFrame && isReceivingRequiredColor)
+        {
+            isReceivingRequiredColor = false;
+            if (targetDoor != null)
+            {
+                //Debug.Log($"[LightReceiver] '{name}' - луч перестал попадать, закрываю дверь");
+                targetDoor.Close();
+            }
+        }
+
+        checkThisFrame = false;
     }
 
- 
-    public void ReceiveLight(Color incomingColor)
+    public void ReceiveLight(Color lightColor)
     {
-      
-        myRenderer.material.color = incomingColor;
+        checkThisFrame = true;
 
-       
-        bool rMatch = Mathf.Abs(incomingColor.r - targetColor.r) <= tolerance;
-        bool gMatch = Mathf.Abs(incomingColor.g - targetColor.g) <= tolerance;
-        bool bMatch = Mathf.Abs(incomingColor.b - targetColor.b) <= tolerance;
+        float colorDifference = Vector3.Distance(
+            new Vector3(lightColor.r, lightColor.g, lightColor.b),
+            new Vector3(requiredColor.r, requiredColor.g, requiredColor.b)
+        );
 
-        if (rMatch && gMatch && bMatch && !isActivated)
+        bool colorMatches = colorDifference <= colorTolerance;
+
+        //Debug.Log($"[LightReceiver] '{name}' - получен цвет: ({lightColor.r:F2}, {lightColor.g:F2}, {lightColor.b:F2}), " +
+        //          $"требуется: ({requiredColor.r:F2}, {requiredColor.g:F2}, {requiredColor.b:F2}), " +
+        //          $"разница: {colorDifference:F3}, совпадение: {colorMatches}");
+
+        if (colorMatches && !isReceivingRequiredColor)
         {
-            isActivated = true;
+            isReceivingRequiredColor = true;
+            if (targetDoor != null)
+            {
+                //Debug.Log($"[LightReceiver] '{name}' - цвет совпал, открываю дверь!");
+                targetDoor.Open();
+            }
+        }
+        else if (!colorMatches && isReceivingRequiredColor)
+        {
+            isReceivingRequiredColor = false;
+            if (targetDoor != null)
+            {
+                //Debug.Log($"[LightReceiver] '{name}' - цвет НЕ совпал, закрываю дверь");
+                targetDoor.Close();
+            }
         }
     }
 
- 
-    public void LostLight()
+    void OnDrawGizmosSelected()
     {
-        isActivated = false;
-        myRenderer.material.color = idleColor;
+        Gizmos.color = requiredColor;
+        Gizmos.DrawWireSphere(transform.position, 0.2f);
+        Gizmos.DrawRay(transform.position, transform.forward * 0.3f);
     }
 }

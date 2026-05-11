@@ -6,4 +6,6 @@ public struct RayPacket
     public Vector3 direction;
     public Vector3 color;
     public int depth;
+    public Vector3 endPoint;
+    public bool isInternal;
 }
